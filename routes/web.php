@@ -24,5 +24,4 @@ Route::get('/create', function () {
     return view('create-contact');
 })->name('create');
 
-
 Route::resource('/users', UserController::class);

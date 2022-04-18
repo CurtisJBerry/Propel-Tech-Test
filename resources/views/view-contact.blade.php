@@ -1,13 +1,11 @@
-@include('header')
+@include('layout.header')
 <body>
 
 <div class="container">
-    <h2>View the Address Book</h2>
-    <button class="btn btn-success float-right">Add new Contact</button>
+    <h2>View a Contact</h2>
     <table class="table table-hover">
         <thead>
         <tr>
-            <th>ID</th>
             <th>Firstname</th>
             <th>Lastname</th>
             <th>Phone Number</th>
@@ -18,20 +16,17 @@
         @if(empty($data))
             <td>No contacts currently available!</td>
         @else
-            @foreach($data as $val)
-                <tr>
-                    <td>{{$val['id']}}</td>
-                    <td>{{$val['first_name']}}</td>
-                    <td>{{$val['last_name']}}</td>
-                    <td>{{$val['phone']}}</td>
-                    <td>{{$val['email']}}</td>
-                </tr>
-            @endforeach
+        <tr>
+            <td>{{$data['first_name']}}</td>
+            <td>{{$data['last_name']}}</td>
+            <td>{{$data['phone']}}</td>
+            <td>{{$data['email']}}</td>
+        </tr>
         </tbody>
     </table>
     @endif
 </div>
 
-
+<!-- Footer-->
+@include('layout.footer')
 </body>
-</html>

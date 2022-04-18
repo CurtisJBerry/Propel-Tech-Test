@@ -1,11 +1,15 @@
-@include('header')
+@include('layout.header')
 <body>
-<div class="container">
-    <h2>Address Book Application</h2>
-    <div class="container">
+<!-- Page Content-->
+<div class="container px-4 px-lg-5">
+    <!-- Heading Row-->
+    <div class="row gx-4 gx-lg-5 align-items-center my-5">
+        <h2>Create a new Contact</h2>
+        <div class="col-lg-12 mb-5">
         <div class="row align-items-start">
             <div class="col-md-3">
-                <form>
+                <form action="{{ route('users.store') }}" method="POST">
+                    @csrf
                     <div class="mb-3">
                         <label for="first_name" class="form-label">First Name</label>
                         <input type="text" class="form-control" id="first_name" name="first_name" required>
@@ -33,5 +37,6 @@
         </div>
     </div>
 </div>
-
+<!-- Footer-->
+@include('layout.footer')
 </body>
