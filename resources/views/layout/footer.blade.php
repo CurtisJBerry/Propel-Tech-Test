@@ -1,4 +1,4 @@
-<footer class="py-5 bg-dark" style="position: fixed;
+<footer class="py-3 bg-dark" style="position: fixed;
     left: 0;
     bottom: 0;
     width: 100%;

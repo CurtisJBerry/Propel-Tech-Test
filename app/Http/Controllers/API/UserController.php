@@ -4,7 +4,11 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
 
 class UserController extends Controller
@@ -16,22 +20,27 @@ class UserController extends Controller
      */
     public function index()
     {
-        if(file_exists(storage_path('\app\public/contacts.json'))){
+        if(file_exists(storage_path('\app\public\contacts.json'))){
             // Read File
-            $jsonString = file_get_contents(storage_path('\app\public/contacts.json'));
+            $jsonString = file_get_contents(storage_path('\app\public\contacts.json'));
 
             $data = json_decode($jsonString, true);
+
+            $data = collect($data);
+
+
+            return view('welcome', compact('data'));
         }else{
-            return "No file is available!";
+            Session::flash('error','No file found!');
+            return view('welcome');
         }
 
-        return view('welcome', compact('data'));
     }
 
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param Request $request
      * @return \Illuminate\Http\Response
      */
     public function store(Request $request)
@@ -44,76 +53,134 @@ class UserController extends Controller
 
         ]);
 
-        if(file_exists(storage_path('\app\public/contacts.json')))
+        if(file_exists(storage_path('\app\public\contacts.json')))
         {
             $final_data= $this->fileWriteAppend();
-            if(file_put_contents(storage_path('\app\public/contacts.json'), $final_data))
+            if(file_put_contents(storage_path('\app\public\contacts.json'), $final_data))
             {
-                $message = "<label class='text-success'>Data added Success fully</p>";
+                $message = "Contact added successfully";
             }
         }
         else
         {
             $final_data= $this->fileCreateWrite();
-            if(file_put_contents(storage_path('\app\public/contacts.json'), $final_data))
+            if(file_put_contents(storage_path('\app\public\contacts.json'), $final_data))
             {
-                $message = "<label class='text-success'>File created and  data added Successfully</p>";
+                $message = "File created and contact added successfully";
             }
 
         }
 
 
-        return redirect()->route('users.index');
+        return redirect()->route('users.index')->with('message', $message);
     }
 
     /**
      * Display the specified resource.
      *
-     * @param  \App\Models\User  $user
+     * @param $id
      * @return \Illuminate\Http\Response
      */
     public function show($id)
     {
-        if(file_exists(storage_path('\app\public/contacts.json'))){
+        if(file_exists(storage_path('\app\public\contacts.json'))){
             // Read File
-            $jsonString = file_get_contents(storage_path('\app\public/contacts.json'));
+            $jsonString = file_get_contents(storage_path('\app\public\contacts.json'));
 
             $collection = collect(json_decode($jsonString, true));
 
             $data = $collection->get($id);
 
-
+            return view('view-contact', compact('data'));
 
         }else{
-            return "No file is available!";
+            return back()->with('error', 'Record could not be shown.');
         }
-
-
-
-        return view('view-contact', compact('data'));
     }
 
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\User  $user
+     * @param Request $request
+     * @param $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, User $user)
+    public function update(Request $request, $id)
     {
-        //
+        $request->validate([
+            'first_name' => 'required',
+            'last_name' => 'required',
+            'phone' => 'required',
+            'email' => 'required',
+
+        ]);
+
+        if(file_exists(storage_path('\app\public\contacts.json')))
+        {
+            //decode json to array
+            $json = json_decode(file_get_contents(storage_path('\app\public\contacts.json')),true);
+
+            foreach ($json as $key => $value) {
+                if ($key == $id) {
+                    $json[$key]['first_name'] = $request->first_name;
+
+                    // encode array to json and save to file
+                    file_put_contents(storage_path('\app\public\contacts.json'), json_encode($json, JSON_PRETTY_PRINT));
+
+                    return redirect()->route('users.index')->with('message', 'Contact Updated');
+                }
+            }
+
+        }
+        else
+        {
+            return back()->with('error', 'Record could not be updated!');
+        }
+
+
+
     }
 
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\User  $user
      * @return \Illuminate\Http\Response
      */
-    public function destroy(User $user)
+    public function destroy($id)
     {
-        //
+        if(file_exists(storage_path('\app\public\contacts.json')))
+        {
+            //decode json to array
+            $json = json_decode(file_get_contents(storage_path('\app\public\contacts.json')),true);
+
+            // get array index to delete
+            $arr_index = array();
+            foreach ($json as $key => $value) {
+                if ($key == $id) {
+                    $arr_index[] = $key;
+                }
+            }
+
+            // delete data
+            foreach ($arr_index as $i)
+            {
+                unset($json[$i]);
+            }
+
+            // rebase array
+            $json = array_values($json);
+
+            // encode array to json and save to file
+            file_put_contents(storage_path('\app\public\contacts.json'), json_encode($json, JSON_PRETTY_PRINT));
+
+            return redirect()->route('users.index')->with('message', 'Contact Deleted');
+
+        }
+        else
+        {
+            return back()->with('error', 'Record could not be updated!');
+        }
+
     }
 
     /**
@@ -131,8 +198,7 @@ class UserController extends Controller
 
         );
         $array_data[] = $extra;
-        $final_data = json_encode($array_data, JSON_PRETTY_PRINT);
-        return $final_data;
+        return json_encode($array_data, JSON_PRETTY_PRINT);
     }
 
     private function fileCreateWrite()

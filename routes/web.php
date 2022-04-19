@@ -25,3 +25,29 @@ Route::get('/create', function () {
 })->name('create');
 
 Route::resource('/users', UserController::class);
+
+Route::controller(UserController::class)->group(function () {
+    Route::get('/users/{id}', 'show')->name('show');
+
+    Route::get('/users/update/{id}', function ($id){
+        if(file_exists(storage_path('\app\public\contacts.json'))){
+            // Read File
+            $jsonString = file_get_contents(storage_path('\app\public\contacts.json'));
+
+            $collection = collect(json_decode($jsonString, true));
+
+            $data = $collection->get($id);
+
+            return view('update-contact', compact('data', 'id'));
+
+        }else{
+            return back()->with('error', 'Record could not be found.');
+        }
+    })->name('update-page');
+
+    Route::post('/users/update/{id}','update')->name('update');
+
+    Route::post('/users/store/{id}','store')->name('store');
+
+    Route::get('/users/delete/{id}','destroy')->name('destroy');
+});
