@@ -6,6 +6,9 @@
     <div class="row gx-4 gx-lg-5 align-items-center my-5">
         <h2 class="h2">Create a new Contact</h2>
         <div class="col-lg-12 mb-5">
+            <a href="{{ route('users.index') }}">
+                <button class="btn btn-primary float-right">Back</button>
+            </a>
         <div class="row align-items-start">
             <div class="col-md-3">
                 <form action="{{ route('users.store') }}" method="POST">

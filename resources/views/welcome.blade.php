@@ -8,26 +8,33 @@
         @include('layout.messages')
         <div class="col-lg-12 mb-5">
             <a href="{{ route('create') }}">
-                <button class="btn btn-success float-right">Create new Contact</button>
+                <button class="btn btn-success float-right inline">Create new Contact</button>
             </a>
+            <form class="row g-3" method="POST" action="{{ route('search') }}">
+                @csrf
+                <div class="col-auto">
+                    <input type="text" class="form-control" id="value" name="value" placeholder="Search Contacts">
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-primary mb-3">Search</button>
+                </div>
+            </form>
             <table class="table table-hover table-responsive">
                 <thead>
                 <tr>
-                    <th>ID</th>
-                    <th>Firstname</th>
-                    <th>Lastname</th>
+                    <th>First Name</th>
+                    <th>Last Name</th>
                     <th>Phone Number</th>
                     <th>Email</th>
                     <th></th>
                 </tr>
                 </thead>
                 <tbody>
-                @if(empty($data))
+                @if(!$data->count())
                     <td>No contacts currently available!</td>
                 @else
                     @foreach($data as $key => $val)
                         <tr>
-                            <td>{{$key}}</td>
                             <td>{{$val['first_name']}}</td>
                             <td>{{$val['last_name']}}</td>
                             <td>{{$val['phone']}}</td>
@@ -51,6 +58,7 @@
             </table>
             @endif
         </div>
+        {{$data->links()}}
     </div>
 </div>
 <!-- Footer-->

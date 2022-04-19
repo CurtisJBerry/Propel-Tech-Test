@@ -1,15 +1,16 @@
 <?php
 
-namespace App\Http\Controllers\API;
+namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
-use App\Models\User;
+use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Contracts\View\Factory;
+use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Session;
-use Illuminate\Support\Facades\Validator;
 
 class UserController extends Controller
 {
@@ -20,7 +21,7 @@ class UserController extends Controller
      */
     public function index()
     {
-        if(file_exists(storage_path('\app\public\contacts.json'))){
+        if (file_exists(storage_path('\app\public\contacts.json'))) {
             // Read File
             $jsonString = file_get_contents(storage_path('\app\public\contacts.json'));
 
@@ -28,10 +29,11 @@ class UserController extends Controller
 
             $data = collect($data);
 
+            $data = $data->paginate(5);
 
             return view('welcome', compact('data'));
-        }else{
-            Session::flash('error','No file found!');
+        } else {
+            Session::flash('error', 'No file found!');
             return view('welcome');
         }
 
@@ -53,19 +55,14 @@ class UserController extends Controller
 
         ]);
 
-        if(file_exists(storage_path('\app\public\contacts.json')))
-        {
-            $final_data= $this->fileWriteAppend();
-            if(file_put_contents(storage_path('\app\public\contacts.json'), $final_data))
-            {
+        if (file_exists(storage_path('\app\public\contacts.json'))) {
+            $final_data = $this->fileWriteAppend();
+            if (file_put_contents(storage_path('\app\public\contacts.json'), $final_data)) {
                 $message = "Contact added successfully";
             }
-        }
-        else
-        {
-            $final_data= $this->fileCreateWrite();
-            if(file_put_contents(storage_path('\app\public\contacts.json'), $final_data))
-            {
+        } else {
+            $final_data = $this->fileCreateWrite();
+            if (file_put_contents(storage_path('\app\public\contacts.json'), $final_data)) {
                 $message = "File created and contact added successfully";
             }
 
@@ -83,7 +80,7 @@ class UserController extends Controller
      */
     public function show($id)
     {
-        if(file_exists(storage_path('\app\public\contacts.json'))){
+        if (file_exists(storage_path('\app\public\contacts.json'))) {
             // Read File
             $jsonString = file_get_contents(storage_path('\app\public\contacts.json'));
 
@@ -93,7 +90,7 @@ class UserController extends Controller
 
             return view('view-contact', compact('data'));
 
-        }else{
+        } else {
             return back()->with('error', 'Record could not be shown.');
         }
     }
@@ -115,10 +112,9 @@ class UserController extends Controller
 
         ]);
 
-        if(file_exists(storage_path('\app\public\contacts.json')))
-        {
+        if (file_exists(storage_path('\app\public\contacts.json'))) {
             //decode json to array
-            $json = json_decode(file_get_contents(storage_path('\app\public\contacts.json')),true);
+            $json = json_decode(file_get_contents(storage_path('\app\public\contacts.json')), true);
 
             foreach ($json as $key => $value) {
                 if ($key == $id) {
@@ -131,13 +127,9 @@ class UserController extends Controller
                 }
             }
 
-        }
-        else
-        {
+        } else {
             return back()->with('error', 'Record could not be updated!');
         }
-
-
 
     }
 
@@ -148,10 +140,9 @@ class UserController extends Controller
      */
     public function destroy($id)
     {
-        if(file_exists(storage_path('\app\public\contacts.json')))
-        {
+        if (file_exists(storage_path('\app\public\contacts.json'))) {
             //decode json to array
-            $json = json_decode(file_get_contents(storage_path('\app\public\contacts.json')),true);
+            $json = json_decode(file_get_contents(storage_path('\app\public\contacts.json')), true);
 
             // get array index to delete
             $arr_index = array();
@@ -162,8 +153,7 @@ class UserController extends Controller
             }
 
             // delete data
-            foreach ($arr_index as $i)
-            {
+            foreach ($arr_index as $i) {
                 unset($json[$i]);
             }
 
@@ -175,12 +165,45 @@ class UserController extends Controller
 
             return redirect()->route('users.index')->with('message', 'Contact Deleted');
 
-        }
-        else
-        {
+        } else {
             return back()->with('error', 'Record could not be updated!');
         }
 
+    }
+
+    /**
+     * @param Request $request
+     * @return Application|Factory|View|RedirectResponse
+     */
+    public function search(Request $request)
+    {
+        $request->validate([
+            'value' => 'required',
+        ]);
+
+        $searchValue = $request->value;
+
+        if (file_exists(storage_path('\app\public\contacts.json'))) {
+            // Read File
+            $jsonString = file_get_contents(storage_path('\app\public\contacts.json'));
+
+            $collection = collect(json_decode($jsonString, true));
+
+            foreach ($collection as $key => $value) {
+                foreach ($value as $keyval => $val) {
+                    $data = $collection->reject(function ($element) use ($searchValue, $keyval) {
+                        return (stripos(strtolower($element[$keyval]), strtolower($searchValue)) === false);
+                    });
+                }
+            }
+
+            $data = $data->paginate(5);
+
+            return view('search-contact', compact('data'));
+
+        } else {
+            return back()->with('error', 'Record could not be found');
+        }
     }
 
     /**
@@ -191,32 +214,46 @@ class UserController extends Controller
         $current_data = file_get_contents(storage_path('\app\public/contacts.json'));
         $array_data = json_decode($current_data, true);
         $extra = array(
-            'first_name'               =>     $_POST["first_name"],
-            'last_name'          =>     $_POST["last_name"],
-            'phone'          =>     $_POST["phone"],
-            'email'     =>     $_POST["email"],
+            'first_name' => $_POST["first_name"],
+            'last_name' => $_POST["last_name"],
+            'phone' => $_POST["phone"],
+            'email' => $_POST["email"],
 
         );
         $array_data[] = $extra;
         return json_encode($array_data, JSON_PRETTY_PRINT);
     }
 
+    /**
+     * @return false|string
+     */
     private function fileCreateWrite()
     {
-        $file=fopen((storage_path('\app\public/contacts.json')),"w");
-        $array_data=array();
+        $file = fopen((storage_path('\app\public/contacts.json')), "w");
+        $array_data = array();
         $extra = array(
-            'name'               =>     $_POST['name'],
-            'gender'          =>     $_POST["gender"],
-            'age'          =>     $_POST["age"],
-            'education'     =>     $_POST["education"],
-            'designation'     =>     $_POST["designation"],
-            'dob'     =>     $_POST["dob"]
+            'name' => $_POST['name'],
+            'gender' => $_POST["gender"],
+            'age' => $_POST["age"],
+            'education' => $_POST["education"],
+            'designation' => $_POST["designation"],
+            'dob' => $_POST["dob"]
 
         );
         $array_data[] = $extra;
         $final_data = json_encode($array_data, JSON_PRETTY_PRINT);
         fclose($file);
         return $final_data;
+    }
+
+    public function paginate($items, $perPage = 2, $page = null)
+    {
+        $page = $page ?: (Paginator::resolveCurrentPage() ?: 1);
+        $items = $items instanceof Collection ? $items : Collection::make($items);
+        return new LengthAwarePaginator($items->forPage($page, $perPage), $items->count(), $perPage, $page, [
+            'path' => Paginator::resolveCurrentPath(),
+            'pageName' => 'page',
+        ]);
+
     }
 }
