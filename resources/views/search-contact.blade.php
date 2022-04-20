@@ -7,8 +7,8 @@
         <h2 class="h2">Search Results</h2>
         @include('layout.messages')
         <div class="col-lg-12 mb-5">
-            <a href="{{ route('users.index') }}">
-                <button class="btn btn-primary float-right">Back</button>
+            <a href="{{ route('create') }}">
+                <button class="btn btn-success float-right inline">Create new Contact</button>
             </a>
             <table class="table table-hover table-responsive">
                 <thead>
@@ -17,6 +17,7 @@
                     <th>Last Name</th>
                     <th>Phone Number</th>
                     <th>Email</th>
+                    <th></th>
                 </tr>
                 </thead>
                 <tbody>
@@ -29,15 +30,29 @@
                             <td>{{$val['last_name']}}</td>
                             <td>{{$val['phone']}}</td>
                             <td>{{$val['email']}}</td>
+                            <td>
+                                <a href="{{ route('show', $key) }}">
+                                    <button class="btn btn-success">View</button>
+                                </a>
+
+                                <a href="{{ route('update-page', $key) }}">
+                                    <button class="btn btn-primary">Edit</button>
+                                </a>
+
+                                <a href="{{ route('destroy', $key) }}">
+                                    <button class="btn btn-danger">Delete</button>
+                                </a>
+                            </td>
                         </tr>
                     @endforeach
                 </tbody>
             </table>
             @endif
-            {{$data->links()}}
         </div>
+        {{$data->links()}}
     </div>
 </div>
 <!-- Footer-->
 @include('layout.footer')
 </body>
+

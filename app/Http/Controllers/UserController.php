@@ -15,27 +15,37 @@ use Illuminate\Support\Facades\Session;
 class UserController extends Controller
 {
     /**
+     * Get the json data from the given filepath
+     * @return string
+     */
+    public function getData(): string
+    {
+        return storage_path('\app\public\contacts.json');
+    }
+
+    /**
      * Display a listing of the resource.
      *
      * @return \Illuminate\Http\Response
      */
     public function index()
     {
-        if (file_exists(storage_path('\app\public\contacts.json'))) {
+        if (file_exists($this->getData())) {
             // Read File
-            $jsonString = file_get_contents(storage_path('\app\public\contacts.json'));
+            $jsonString = file_get_contents($this->getData());
 
             $data = json_decode($jsonString, true);
 
             $data = collect($data);
 
-            $data = $data->paginate(5);
+            $data = $data->paginate(10);
 
-            return view('welcome', compact('data'));
         } else {
             Session::flash('error', 'No file found!');
-            return view('welcome');
+
+            $data = collect();
         }
+        return view('welcome', compact('data'));
 
     }
 
@@ -48,26 +58,25 @@ class UserController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'first_name' => 'required',
-            'last_name' => 'required',
-            'phone' => 'required',
-            'email' => 'required',
+            'first_name' => 'required|max:20',
+            'last_name' => 'required|max:20',
+            'phone' => 'required|max:12',
+            'email' => 'required|max:30',
 
         ]);
 
-        if (file_exists(storage_path('\app\public\contacts.json'))) {
+        if (file_exists($this->getData())) {
             $final_data = $this->fileWriteAppend();
-            if (file_put_contents(storage_path('\app\public\contacts.json'), $final_data)) {
+            if (file_put_contents($this->getData(), $final_data)) {
                 $message = "Contact added successfully";
             }
         } else {
             $final_data = $this->fileCreateWrite();
-            if (file_put_contents(storage_path('\app\public\contacts.json'), $final_data)) {
+            if (file_put_contents($this->getData(), $final_data)) {
                 $message = "File created and contact added successfully";
             }
 
         }
-
 
         return redirect()->route('users.index')->with('message', $message);
     }
@@ -80,15 +89,38 @@ class UserController extends Controller
      */
     public function show($id)
     {
-        if (file_exists(storage_path('\app\public\contacts.json'))) {
+        if (file_exists($this->getData())) {
             // Read File
-            $jsonString = file_get_contents(storage_path('\app\public\contacts.json'));
+            $jsonString = file_get_contents($this->getData());
 
             $collection = collect(json_decode($jsonString, true));
 
             $data = $collection->get($id);
 
             return view('view-contact', compact('data'));
+
+        } else {
+            return back()->with('error', 'Record could not be shown.');
+        }
+    }
+
+    /**
+     * Display the record to be updated.
+     *
+     * @param $id
+     * @return \Illuminate\Http\Response
+     */
+    public function updateRecord($id)
+    {
+        if (file_exists($this->getData())) {
+            // Read File
+            $jsonString = file_get_contents($this->getData());
+
+            $collection = collect(json_decode($jsonString, true));
+
+            $data = $collection->get($id);
+
+            return view('update-contact', compact('data', 'id'));
 
         } else {
             return back()->with('error', 'Record could not be shown.');
@@ -105,23 +137,22 @@ class UserController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
-            'first_name' => 'required',
-            'last_name' => 'required',
-            'phone' => 'required',
-            'email' => 'required',
-
+            'first_name' => 'required|max:20',
+            'last_name' => 'required|max:20',
+            'phone' => 'required|max:12',
+            'email' => 'required|max:30',
         ]);
 
-        if (file_exists(storage_path('\app\public\contacts.json'))) {
+        if (file_exists($this->getData())) {
             //decode json to array
-            $json = json_decode(file_get_contents(storage_path('\app\public\contacts.json')), true);
+            $json = json_decode(file_get_contents($this->getData()), true);
 
             foreach ($json as $key => $value) {
                 if ($key == $id) {
                     $json[$key]['first_name'] = $request->first_name;
 
                     // encode array to json and save to file
-                    file_put_contents(storage_path('\app\public\contacts.json'), json_encode($json, JSON_PRETTY_PRINT));
+                    file_put_contents($this->getData(), json_encode($json, JSON_PRETTY_PRINT));
 
                     return redirect()->route('users.index')->with('message', 'Contact Updated');
                 }
@@ -140,9 +171,9 @@ class UserController extends Controller
      */
     public function destroy($id)
     {
-        if (file_exists(storage_path('\app\public\contacts.json'))) {
+        if (file_exists($this->getData())) {
             //decode json to array
-            $json = json_decode(file_get_contents(storage_path('\app\public\contacts.json')), true);
+            $json = json_decode(file_get_contents($this->getData()), true);
 
             // get array index to delete
             $arr_index = array();
@@ -161,7 +192,7 @@ class UserController extends Controller
             $json = array_values($json);
 
             // encode array to json and save to file
-            file_put_contents(storage_path('\app\public\contacts.json'), json_encode($json, JSON_PRETTY_PRINT));
+            file_put_contents($this->getData(), json_encode($json, JSON_PRETTY_PRINT));
 
             return redirect()->route('users.index')->with('message', 'Contact Deleted');
 
@@ -183,9 +214,9 @@ class UserController extends Controller
 
         $searchValue = $request->value;
 
-        if (file_exists(storage_path('\app\public\contacts.json'))) {
+        if (file_exists($this->getData())) {
             // Read File
-            $jsonString = file_get_contents(storage_path('\app\public\contacts.json'));
+            $jsonString = file_get_contents($this->getData());
 
             $collection = collect(json_decode($jsonString, true));
 
@@ -211,7 +242,7 @@ class UserController extends Controller
      */
     private function fileWriteAppend()
     {
-        $current_data = file_get_contents(storage_path('\app\public/contacts.json'));
+        $current_data = file_get_contents($this->getData());
         $array_data = json_decode($current_data, true);
         $extra = array(
             'first_name' => $_POST["first_name"],
@@ -229,7 +260,7 @@ class UserController extends Controller
      */
     private function fileCreateWrite()
     {
-        $file = fopen((storage_path('\app\public/contacts.json')), "w");
+        $file = fopen(($this->getData()), "w");
         $array_data = array();
         $extra = array(
             'name' => $_POST['name'],
@@ -244,16 +275,5 @@ class UserController extends Controller
         $final_data = json_encode($array_data, JSON_PRETTY_PRINT);
         fclose($file);
         return $final_data;
-    }
-
-    public function paginate($items, $perPage = 2, $page = null)
-    {
-        $page = $page ?: (Paginator::resolveCurrentPage() ?: 1);
-        $items = $items instanceof Collection ? $items : Collection::make($items);
-        return new LengthAwarePaginator($items->forPage($page, $perPage), $items->count(), $perPage, $page, [
-            'path' => Paginator::resolveCurrentPath(),
-            'pageName' => 'page',
-        ]);
-
     }
 }

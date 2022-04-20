@@ -30,7 +30,7 @@
                 </tr>
                 </thead>
                 <tbody>
-                @if(!$data->count())
+                @if(!$data->count() or empty($data))
                     <td>No contacts currently available!</td>
                 @else
                     @foreach($data as $key => $val)
@@ -58,7 +58,9 @@
             </table>
             @endif
         </div>
-        {{$data->links()}}
+        @if($data->count())
+            {{$data->links()}}
+        @endif
     </div>
 </div>
 <!-- Footer-->

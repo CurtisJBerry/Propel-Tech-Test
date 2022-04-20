@@ -16,20 +16,32 @@
                     @method('POST')
                     <div class="mb-3">
                         <label for="first_name" class="form-label">First Name</label>
-                        <input type="text" class="form-control" id="first_name" name="first_name" required>
+                        <input type="text" class="form-control" id="first_name" name="first_name" required maxlength="20">
+                        @if($errors->has('first_name'))
+                            <p style="color: red">{{$errors->first('first_name')}}</p>
+                        @endif
                     </div>
                     <div class="mb-3">
                         <label for="last_name" class="form-label">Last Name</label>
-                        <input type="text" class="form-control" id="last_name" name="last_name" required>
+                        <input type="text" class="form-control" id="last_name" name="last_name" required maxlength="20">
+                        @if($errors->has('last_name'))
+                            <p style="color: red">{{$errors->first('last_name')}}</p>
+                        @endif
                     </div>
                     <div class="mb-3">
                         <label for="phone" class="form-label">Phone</label>
                         <input type="tel" class="form-control" id="phone" name="phone" required maxlength="12">
                         <small>Format: 123456789102</small>
+                        @if($errors->has('phone'))
+                            <p style="color: red">{{$errors->first('phone')}}</p>
+                        @endif
                     </div>
                     <div class="mb-3">
                         <label for="email" class="form-label">Email address</label>
-                        <input type="email" class="form-control" id="email" name="email" required>
+                        <input type="email" class="form-control" id="email" name="email" required maxlength="30">
+                        @if($errors->has('email'))
+                            <p style="color: red">{{$errors->first('email')}}</p>
+                        @endif
                     </div>
                     <button type="submit" class="btn btn-primary">Submit</button>
                 </form>
