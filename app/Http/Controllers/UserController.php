@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Session;
+use function PHPUnit\Framework\isEmpty;
 
 class UserController extends Controller
 {
@@ -97,7 +98,13 @@ class UserController extends Controller
 
             $data = $collection->get($id);
 
-            return view('view-contact', compact('data'));
+            if(!empty($data)){
+
+                return view('view-contact', compact('data'));
+
+            }else{
+                return back()->with('error', 'The given id could not be found');
+            }
 
         } else {
             return back()->with('error', 'Record could not be shown.');
@@ -120,7 +127,13 @@ class UserController extends Controller
 
             $data = $collection->get($id);
 
-            return view('update-contact', compact('data', 'id'));
+            if(!empty($data)){
+
+                return view('update-contact', compact('data', 'id'));
+
+            }else{
+                return back()->with('error', 'The given id could not be found');
+            }
 
         } else {
             return back()->with('error', 'Record could not be shown.');
@@ -150,6 +163,9 @@ class UserController extends Controller
             foreach ($json as $key => $value) {
                 if ($key == $id) {
                     $json[$key]['first_name'] = $request->first_name;
+                    $json[$key]['last_name'] = $request->last_name;
+                    $json[$key]['phone'] = $request->phone;
+                    $json[$key]['email'] = $request->email;
 
                     // encode array to json and save to file
                     file_put_contents($this->getData(), json_encode($json, JSON_PRETTY_PRINT));
@@ -263,12 +279,10 @@ class UserController extends Controller
         $file = fopen(($this->getData()), "w");
         $array_data = array();
         $extra = array(
-            'name' => $_POST['name'],
-            'gender' => $_POST["gender"],
-            'age' => $_POST["age"],
-            'education' => $_POST["education"],
-            'designation' => $_POST["designation"],
-            'dob' => $_POST["dob"]
+            'first_name' => $_POST["first_name"],
+            'last_name' => $_POST["last_name"],
+            'phone' => $_POST["phone"],
+            'email' => $_POST["email"],
 
         );
         $array_data[] = $extra;

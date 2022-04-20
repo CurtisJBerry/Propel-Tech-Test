@@ -27,6 +27,7 @@ Route::get('/create', function () {
 Route::resource('/users', UserController::class);
 
 Route::controller(UserController::class)->group(function () {
+
     Route::get('/users/{id}', 'show')->name('show');
 
     Route::get('/users/update/{id}','updateRecord')->name('update-page');
