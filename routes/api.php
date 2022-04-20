@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Models\User;
@@ -15,21 +16,8 @@ use App\Models\User;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
-});
+Route::get('/', function () {
 
-Route::get('/contacts', function (){
-    return User::all();
+    return redirect()->route('users.index');
 });
-
-Route::post('/contacts', function (){
-    return User::create([
-        'first_name' => request('first_name'),
-        'last_name' => request('last_name'),
-        'phone' => request('phone'),
-        'email' => request('email'),
-    ]);
-});
-
 

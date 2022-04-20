@@ -33,7 +33,7 @@ Route::controller(UserController::class)->group(function () {
 
     Route::post('/users/update/{id}','update')->name('update');
 
-    Route::post('/users/store/{id}','store')->name('store');
+    Route::post('/users/store','store')->name('store');
 
     Route::get('/users/delete/{id}','destroy')->name('destroy');
 
