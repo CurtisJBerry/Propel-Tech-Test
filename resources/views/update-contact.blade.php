@@ -16,7 +16,7 @@
                         @csrf
                         <div class="mb-3">
                             <label for="first_name" class="form-label">First Name</label>
-                            <input type="text" class="form-control" id="first_name" name="first_name" value="{{$data['first_name']}}" required maxlength="20">
+                            <input type="text" class="form-control" id="first_name" name="first_name" value="{{$data['first_name']}}" required>
                             @if($errors->has('first_name'))
                                 <p style="color: red">{{$errors->first('first_name')}}</p>
                             @endif

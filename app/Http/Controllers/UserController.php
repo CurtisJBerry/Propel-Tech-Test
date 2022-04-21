@@ -150,7 +150,7 @@ class UserController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
-            'first_name' => 'required|max:20',
+            'first_name' => 'required',
             'last_name' => 'required|max:20',
             'phone' => 'required|max:12',
             'email' => 'required|max:30',
@@ -171,6 +171,10 @@ class UserController extends Controller
                     file_put_contents($this->getData(), json_encode($json, JSON_PRETTY_PRINT));
 
                     return redirect()->route('users.index')->with('message', 'Contact Updated');
+
+                }elseif(!array_key_exists($id, $json)){
+
+                    return back()->with('error', 'Record could not be updated!');
                 }
             }
 
@@ -199,6 +203,10 @@ class UserController extends Controller
                 }
             }
 
+            if(empty($arr_index)){
+                return back()->with('error', 'Record could not be deleted!');
+            }
+
             // delete data
             foreach ($arr_index as $i) {
                 unset($json[$i]);
@@ -213,7 +221,7 @@ class UserController extends Controller
             return redirect()->route('users.index')->with('message', 'Contact Deleted');
 
         } else {
-            return back()->with('error', 'Record could not be updated!');
+            return back()->with('error', 'Record could not be deleted!');
         }
 
     }
@@ -244,9 +252,12 @@ class UserController extends Controller
                 }
             }
 
-            $data = $data->paginate(5);
-
-            return view('search-contact', compact('data'));
+            if ($data->isEmpty()){
+                return back()->with('error', 'No matching records could be found');
+            }else{
+                $data = $data->paginate(5);
+                return view('search-contact', compact('data'));
+            }
 
         } else {
             return back()->with('error', 'Record could not be found');

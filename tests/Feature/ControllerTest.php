@@ -79,7 +79,7 @@ class ControllerTest extends TestCase
 
         $data = $collection->all();
 
-        //get last key of item that exists in array
+        //get first key of item that exists in array
         $data = array_key_first($data);
 
         // 0 is supplied to give first record in json file
@@ -144,18 +144,100 @@ class ControllerTest extends TestCase
         $data  = array_key_first($data);
 
         //update the first record in the file
-        $response = $this->post('/users/update/' . $data,
-            array(['first_name' => 'David', 'last_name' => 'Blatt', 'phone' => '01913478234', 'email' => 'david.blatt@corrie.co.uk']));
+        $response = $this->post('/users/update/'. $data,
+            ['first_name' => 'David', 'last_name' => 'Blatt', 'phone' => '01913478234', 'email' => 'david.blatt@corrie.co.uk']);
 
-        $message = "Contact updated";
-        $response->assertRedirect('/')->withHeaders([$message]);
+        $response->assertValid();
+        $response->assertSessionHas('message', 'Contact Updated');
+
+        $response->assertRedirect('/users');
     }
 
     /**
-     * Make an invalid update request
+     * Make an invalid update request as the given id doesn't exist
      */
     public function test_false_update_request()
     {
+        $jsonString = file_get_contents(storage_path('\app\public\contacts.json'));
 
+        $collection = collect(json_decode($jsonString, true));
+
+        //get all records and then get the key of the last record
+        $data = $collection->all();
+        $data  = array_key_last($data);
+
+        //update the last + 1 record in the file which does not exist
+        $response = $this->post('/users/update/' . $data+1,
+            array(['first_name' => 'David', 'last_name' => 'Blatt', 'phone' => '01913478234', 'email' => 'david.blatt@corrie.co.uk']));
+
+        //Session should have errors as the record doesn't exist
+        $response->assertSessionHasErrors();
+        $response->assertRedirect('/');
+
+    }
+
+    /**
+     * Make a valid destroy request
+     */
+    public function test_destroy_request()
+    {
+        $jsonString = file_get_contents(storage_path('\app\public\contacts.json'));
+
+        $collection = collect(json_decode($jsonString, true));
+
+        //get all records and then get the key of the first record
+        $data = $collection->all();
+        $data  = array_key_first($data);
+
+        $response = $this->get('/users/delete/'.$data);
+
+        $response->assertValid();
+        $response->assertSessionHas('message', 'Contact Deleted');
+        $response->assertRedirect('/users');
+
+    }
+
+    public function test_false_destroy_request()
+    {
+        $jsonString = file_get_contents(storage_path('\app\public\contacts.json'));
+
+        $collection = collect(json_decode($jsonString, true));
+
+        //get all records and then get the key of the last record
+        $data = $collection->all();
+        $data  = array_key_last($data);
+
+        $response = $this->get('/users/delete/'.$data+1);
+
+        //Session should have errors as the record doesn't exist
+        $response->assertSessionHas('error', 'Record could not be deleted!');
+        $response->assertRedirect('/');
+
+    }
+
+    public function test_search_request()
+    {
+
+        $jsonString = file_get_contents(storage_path('\app\public\contacts.json'));
+
+        $collection = collect(json_decode($jsonString, true));
+
+        $data = $collection->first();
+
+        //pass search value that exists as part of first record
+        $response = $this->post('/users/search', ['value' => $data['first_name']]);
+
+        $response->assertValid();
+        $response->assertViewIs('search-contact');
+        $response->assertViewHasAll(['data']);
+    }
+
+    public function test_false_search_request()
+    {
+        //pass search value that does not exist as part of any current record (using the given example data)
+        $response = $this->post('/users/search', ['value' => 'Jim']);
+
+        $response->assertRedirect('/');
+        $response->assertSessionHas('error', 'No matching records could be found');
     }
 }
