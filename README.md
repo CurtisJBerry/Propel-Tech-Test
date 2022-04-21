@@ -25,6 +25,7 @@ DocumentRoot "/xampp/htdocs/propel-tech-test/public"
 ```
 <Directory "/xampp/htdocs/propel-tech-test/public">
 ```
+In this example I am using xampp to host locally
 
 ## Running the tests
 
